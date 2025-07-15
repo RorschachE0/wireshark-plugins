@@ -12,4 +12,3 @@ Visualizes TCP conversations as a basic text sequence diagram.
 3. Click **Refresh** to retap packets and update the display.
 4. Each stream shows packet direction, length and TCP flags for quick
    inspection.
-
