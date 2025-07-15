@@ -82,8 +82,13 @@ local function packet_listener()
         end
     end
 
+    -- Redraw the window after re-tapping the packets
+    local function refresh()
+        retap_packets()
+    end
+
     win:set_atclose(function() tap:remove() end)
-    win:add_button("Refresh", draw)
+    win:add_button("Refresh", refresh)
 
     function tap.draw()
         draw()
@@ -94,7 +99,7 @@ local function packet_listener()
         win:clear()
     end
 
-    draw()
+    refresh()
 end
 
 register_menu("TCP Flow Diagram", packet_listener, MENU_TOOLS_UNSORTED)
