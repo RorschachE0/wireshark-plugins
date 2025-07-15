@@ -10,21 +10,34 @@ local ip_src_f       = Field.new("ip.src")
 local ip_dst_f       = Field.new("ip.dst")
 local tcp_srcport_f  = Field.new("tcp.srcport")
 local tcp_dstport_f  = Field.new("tcp.dstport")
-local tcp_syn_f      = Field.new("tcp.flags.syn")
-local tcp_ack_f      = Field.new("tcp.flags.ack")
-local tcp_fin_f      = Field.new("tcp.flags.fin")
-local tcp_rst_f      = Field.new("tcp.flags.reset")
-local tcp_psh_f      = Field.new("tcp.flags.push")
+-- We'll parse the combined flags bitfield manually. This avoids issues
+-- with missing per-flag fields on some versions of Wireshark.
+local tcp_flags_f    = Field.new("tcp.flags")
 
 local streams = {}
 
+local band
+if bit32 then
+    band = bit32.band
+elseif bit then
+    band = bit.band
+else
+    -- Lua 5.3+ supports bit operators directly
+    band = function(a, b) return a & b end
+end
+
 local function format_flags()
+    local f = tcp_flags_f()
+    if not f then
+        return "-"
+    end
+    local val = f.value
     local flags = ""
-    if tcp_syn_f() and tcp_syn_f().value == 1 then flags = flags .. "S" end
-    if tcp_ack_f() and tcp_ack_f().value == 1 then flags = flags .. "A" end
-    if tcp_fin_f() and tcp_fin_f().value == 1 then flags = flags .. "F" end
-    if tcp_rst_f() and tcp_rst_f().value == 1 then flags = flags .. "R" end
-    if tcp_psh_f() and tcp_psh_f().value == 1 then flags = flags .. "P" end
+    if band(val, 0x02) ~= 0 then flags = flags .. "S" end
+    if band(val, 0x10) ~= 0 then flags = flags .. "A" end
+    if band(val, 0x01) ~= 0 then flags = flags .. "F" end
+    if band(val, 0x04) ~= 0 then flags = flags .. "R" end
+    if band(val, 0x08) ~= 0 then flags = flags .. "P" end
     if flags == "" then flags = "-" end
     return flags
 end
