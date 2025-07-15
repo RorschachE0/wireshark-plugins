@@ -14,4 +14,3 @@ Visualizes TCP conversations as a basic text sequence diagram.
    inspection.
 5. Arrows flip direction while hosts remain fixed, so you'll see `A --> B`
    followed by `A <-- B` for the response.
-
