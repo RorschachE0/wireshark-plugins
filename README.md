@@ -12,3 +12,5 @@ Visualizes TCP conversations as a basic text sequence diagram.
 3. Click **Refresh** to retap packets and update the display.
 4. Each stream shows packet direction, length and TCP flags for quick
    inspection.
+5. Arrows flip direction while hosts remain fixed, so you'll see `A --> B`
+   followed by `A <-- B` for the response.

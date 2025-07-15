@@ -18,6 +18,7 @@ local tcp_dstport_f  = Field.new("tcp.dstport")
 local tcp_flags_f    = Field.new("tcp.flags")
 
 local streams = {}
+local endpoints = {}
 
 local band
 if bit32 then
@@ -61,7 +62,10 @@ local function packet_listener()
             len   = pinfo.len,
             flags = format_flags()
         }
-        if not streams[stream] then streams[stream] = {} end
+        if not streams[stream] then
+            streams[stream] = {}
+            endpoints[stream] = { a = entry.src, b = entry.dst }
+        end
         table.insert(streams[stream], entry)
     end
 
@@ -70,13 +74,28 @@ local function packet_listener()
     local function draw()
         win:clear()
         for stream, items in pairs(streams) do
+            local ep = endpoints[stream]
+            local a = ep and ep.a or "A"
+            local b = ep and ep.b or "B"
             win:append(string.format("Stream %s\n", stream))
-            win:append(string.format("%-23s %-23s\n", "Source", "Destination"))
+            win:append(string.format("%-23s %-23s\n", a, b))
             for _, e in ipairs(items) do
-                local left = string.format("%s:%s", e.src, e.sport)
-                local right = string.format("%s:%s", e.dst, e.dport)
-                win:append(string.format("%8s %-23s --> %-23s len %-5d [%s]\n",
-                    e.time, left, right, e.len, e.flags))
+                local arrow
+                local left_port
+                local right_port
+                if e.src == a then
+                    arrow = "-->"
+                    left_port = e.sport
+                    right_port = e.dport
+                else
+                    arrow = "<--"
+                    left_port = e.dport
+                    right_port = e.sport
+                end
+                local left = string.format("%s:%s", a, left_port)
+                local right = string.format("%s:%s", b, right_port)
+                win:append(string.format("%8s %-23s %s %-23s len %-5d [%s]\n",
+                    e.time, left, arrow, right, e.len, e.flags))
             end
             win:append("\n")
         end
@@ -96,6 +115,7 @@ local function packet_listener()
 
     function tap.reset()
         streams = {}
+        endpoints = {}
         win:clear()
     end
 
